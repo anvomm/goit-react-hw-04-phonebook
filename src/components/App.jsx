@@ -1,5 +1,5 @@
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
-import { Component } from 'react';
 import { GlobalStyles } from 'utils/GlobalStyles';
 import { Section } from './Section/Section';
 import { ContactForm } from './ContactForm/ContactForm';
@@ -7,34 +7,23 @@ import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
 import { Text, Span } from './ContactList/ContactList.styled';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(
+    JSON.parse(localStorage.getItem('contacts')) || []
+  );
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
-    const savedContacts = localStorage.getItem('contacts');
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-    if (savedContacts) {
-      this.setState({ contacts: JSON.parse(savedContacts) });
-    }
-  }
-
-  componentDidUpdate(_, prevState) {
-    const { contacts } = this.state;
-    if (prevState.contacts !== contacts) {
-      localStorage.setItem('contacts', JSON.stringify(contacts));
-    }
-  }
-
-  addContact = contactObject => {
+  const addContact = contactObject => {
     const newContact = {
       ...contactObject,
       id: nanoid(),
     };
 
-    const isExist = this.state.contacts.find(
+    const isExist = contacts.find(
       ({ name }) => name.toLowerCase() === newContact.name.toLowerCase()
     );
 
@@ -42,23 +31,20 @@ export class App extends Component {
       return alert(`${newContact.name} is already in contacts.`);
     }
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    setContacts(prevContacts => [...prevContacts, newContact]);
   };
 
-  deleteContact = idToDelete => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== idToDelete),
-    }));
+  const deleteContact = idToDelete => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== idToDelete)
+    );
   };
 
-  registerFilterValue = e => {
-    this.setState({ filter: e.target.value });
+  const registerFilterValue = e => {
+    setFilter(e.target.value);
   };
 
-  filterContacts = () => {
-    const { contacts, filter } = this.state;
+  const filterContacts = () => {
     const normalizedString = filter.toLowerCase();
 
     return contacts.filter(({ name }) =>
@@ -66,39 +52,33 @@ export class App extends Component {
     );
   };
 
-  render() {
-    const { filter, contacts } = this.state;
-    return (
-      <div>
-        <Section>
-          <h1>Phonebook</h1>
-          <ContactForm addContact={this.addContact}></ContactForm>
-        </Section>
+  return (
+    <div>
+      <Section>
+        <h1>Phonebook</h1>
+        <ContactForm addContact={addContact}></ContactForm>
+      </Section>
 
-        <Section>
-          <h2>Contacts</h2>
-          <Filter
-            filter={filter}
-            findContact={this.registerFilterValue}
-          ></Filter>
+      <Section>
+        <h2>Contacts</h2>
+        <Filter filter={filter} findContact={registerFilterValue}></Filter>
 
-          {contacts.length === 0 && filter === '' ? (
-            <Text>Unfortunately your contacts list is empty</Text>
-          ) : this.filterContacts().length === 0 && filter !== '' ? (
-            <Text>
-              Your list does not contain the contact named
-              <Span> {filter}</Span>
-            </Text>
-          ) : (
-            <ContactList
-              contacts={this.filterContacts()}
-              deleteContact={this.deleteContact}
-            />
-          )}
-        </Section>
+        {contacts.length === 0 && filter === '' ? (
+          <Text>Unfortunately your contacts list is empty</Text>
+        ) : filterContacts().length === 0 && filter !== '' ? (
+          <Text>
+            Your list does not contain the contact named
+            <Span> {filter}</Span>
+          </Text>
+        ) : (
+          <ContactList
+            contacts={filterContacts()}
+            deleteContact={deleteContact}
+          />
+        )}
+      </Section>
 
-        <GlobalStyles />
-      </div>
-    );
-  }
-}
+      <GlobalStyles />
+    </div>
+  );
+};
