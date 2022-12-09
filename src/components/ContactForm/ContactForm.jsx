@@ -20,7 +20,7 @@ export const ContactForm = ({ addContact }) => {
     }
   };
 
-  const submitHandle = e => {
+  const submitHandler = e => {
     e.preventDefault();
     addContact({ name, number });
     setName('');
@@ -28,7 +28,7 @@ export const ContactForm = ({ addContact }) => {
   };
 
   return (
-    <Form onSubmit={submitHandle}>
+    <Form onSubmit={submitHandler}>
       <Wrap>
         <Label>
           Name
